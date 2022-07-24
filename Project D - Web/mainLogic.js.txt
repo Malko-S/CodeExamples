@@ -1,0 +1,53 @@
+const nmath = pc.nmath;
+const ncoroutine = pc.ncoroutine;
+
+var mainLogic = pc.createScript('mainLogic');
+
+mainLogic.attributes.add('Carousel', {  type: 'entity', title: 'Carousel'});
+mainLogic.attributes.add('Turntable', {  type: 'entity', title: 'Turntable'});
+mainLogic.attributes.add('UICarousel', {  type: 'entity', title: 'UI Carousel'});
+mainLogic.attributes.add('UI3D', {  type: 'entity', title: 'UI 3D'});
+
+mainLogic.attributes.add('dynamicSpeed', { type: 'number', title: 'Dynamic Speed', default: 5 });
+mainLogic.attributes.add('dynamicDamping', { type: 'number', title: 'Dynamic Damping', default: 0.8 });
+
+mainLogic.prototype.initialize = function()
+{
+    this.app.on('BtnLeft', this.onLeft, this);    
+    this.app.on('BtnRight', this.onRight, this);    
+    this.app.on('BtnSelect', this.onSelect, this);
+    this.app.on('btnBack', this.onBack, this);  
+
+    this.dynPositionY = new nmath.DynamicValue( 0, this.dynamicSpeed, this.dynamicDamping );
+}
+
+mainLogic.prototype.update = function(dt) 
+{
+    this.Turntable.setLocalPosition(0, this.dynPositionY.compute(dt, this.PositionY), 0);
+};
+
+mainLogic.prototype.onLeft = function (event) 
+{   
+    this.Carousel.script.carousel.Forward();
+};
+
+mainLogic.prototype.onRight = function (event) 
+{   
+    this.Carousel.script.carousel.Backward();
+};
+
+mainLogic.prototype.onSelect = function (event) 
+{  
+    this.UICarousel.enabled = false;
+    this.UI3D.enabled = true;
+    this.Turntable.script.turntable.rangeY = 0;
+    this.PositionY = -9;
+};
+
+mainLogic.prototype.onBack = function (event) 
+{   
+    this.UI3D.enabled = false;
+    this.UICarousel.enabled = true;
+    this.Turntable.script.turntable.rangeY = 70;
+    this.PositionY = this.Carousel.getPosition().y;
+};

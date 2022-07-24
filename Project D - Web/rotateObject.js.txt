@@ -1,0 +1,76 @@
+var rotateObject = pc.createScript('rotateObject');
+
+rotateObject.attributes.add('EnableRotation', {   type: 'boolean',  default: false,  title: 'Enable Rotation'});
+
+rotateObject.prototype.update = function(dt) 
+{
+    //this.entity.setRotation(this.resultQuat);
+};
+
+rotateObject.prototype.initializeRotateObject = function(cameraEntity, rotationSensitivity) 
+{
+    this.cameraEntity = cameraEntity;
+    this.orbitSensitivity = rotationSensitivity;
+};
+
+// initialize code called once per entity
+rotateObject.prototype.initialize = function() 
+{
+    this.horizontalQuat = new pc.Quat();
+    this.verticalQuat = new pc.Quat();
+    this.resultQuat = new pc.Quat();
+
+    // INPUT
+    this.app.mouse.on(pc.EVENT_MOUSEMOVE, this.onMouseMove, this);
+    this.lastTouchPoint = new pc.Vec2();
+    if (this.app.touch) 
+    {
+        this.app.touch.on(pc.EVENT_TOUCHSTART, this.onTouchStart, this);
+        this.app.touch.on(pc.EVENT_TOUCHMOVE, this.onTouchMove, this);        
+    }
+};
+
+rotateObject.prototype.rotate = function (dx, dy) 
+{
+    if(this.EnableRotation)
+    {
+        this.horizontalQuat.setFromAxisAngle(this.cameraEntity.up, dx * this.orbitSensitivity);
+        this.verticalQuat.setFromAxisAngle(this.cameraEntity.right, dy * this.orbitSensitivity);
+    
+        this.resultQuat.mul2(this.horizontalQuat, this.verticalQuat);
+        this.resultQuat.mul(this.entity.getRotation());
+
+        this.entity.setRotation(this.resultQuat);
+    }  
+};
+
+rotateObject.prototype.resetRotation = function () 
+{
+    this.entity.setRotation(pc.Quat.ZERO);
+};
+
+// INPUT
+rotateObject.prototype.onTouchStart = function (event) 
+{
+    let touch = event.touches[0];
+    this.lastTouchPoint.set(touch.x, touch.y);
+};
+
+rotateObject.prototype.onTouchMove = function (event) 
+{
+    let touch = event.touches[0];
+    let dx = touch.x - this.lastTouchPoint.x;
+    let dy = touch.y - this.lastTouchPoint.y;
+    this.rotate(dx, dy);
+    this.lastTouchPoint.set(touch.x, touch.y);
+   
+};
+
+rotateObject.prototype.onMouseMove = function (event) 
+{        
+    let mouse = this.app.mouse;
+    if (mouse.isPressed(pc.MOUSEBUTTON_LEFT)) 
+    {
+        this.rotate(event.dx, event.dy);
+    }   
+};
